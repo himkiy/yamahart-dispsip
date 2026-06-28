@@ -34,7 +34,7 @@ fi
 
 echo "----------------------------------------"
 echo "Target Router : ${ROUTER_IP}"
-echo "Target File   : flash:/${TARGET_FILENAME}"
+echo "Target File   : /${TARGET_FILENAME}"
 echo "----------------------------------------"
 
 # 3. テンプレート内のプレースホルダーを置換
@@ -45,7 +45,7 @@ sed "s|{{SLACK_WEBHOOK_URL}}|${SLACK_URL}|g" "$TEMPLATE_FILE" > "$TMP_FILE"
 echo "Uploading to YAMAHA Router via TFTP..."
 tftp "$ROUTER_IP" <<EOS
 mode octet
-put ${TMP_FILE} flash:/${TARGET_FILENAME}
+put ${TMP_FILE} /${TARGET_FILENAME}
 quit
 EOS
 
