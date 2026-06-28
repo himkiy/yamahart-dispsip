@@ -1,0 +1,54 @@
+-- [[ Slack Notification for SIP Call ]]
+
+-- 1. 設定項目
+local slack_url = "{{SLACK_WEBHOOK_URL}}"
+local log_pattern = "%[SIP%] SIP Call from %[sip:"
+
+-- 2. SlackへPOST送信する関数
+function send_to_slack(message)
+    local req = {
+        url = slack_url,
+        method = "POST",
+        headers = {
+            ["Content-Type"] = "application/json"
+        },
+        -- JSON文字列を組み立て（簡易的なエスケープなしの文字連結）
+        body = '{"text": "' .. message .. '"}'
+    }
+    
+    local res, err = rt.httprequest(req)
+    if not res then
+        rt.syslog("error", "[Lua] Slack post failed: " .. tostring(err))
+    elseif res.status ~= 200 then
+        rt.syslog("error", "[Lua] Slack returned status: " .. tostring(res.status))
+    end
+end
+
+-- 3. シスログの常時監視（メインループ）
+local watch_id = rt.syslogwatch({ pattern = log_pattern })
+
+if not watch_id then
+    rt.syslog("error", "[Lua] Failed to start syslogwatch.")
+    rt.exit()
+end
+
+rt.syslog("info", "[Lua] SIP Call monitoring started.")
+
+while true do
+    -- ログが書き込まれるのを待機
+    local log_line, err = rt.syslogwait(watch_id)
+    
+    if log_line then
+        -- ルータのログから余計な改行やクォーテーションを簡易クリア
+        local clean_log = string.gsub(log_line, '["\r\n]', ' ')
+        
+        -- Slack通知を実行
+        local notification_text = "【ルータ通知】SIP Callのログを検知しました:\n`" .. clean_log .. "`"
+        send_to_slack(notification_text)
+    elseif err then
+        rt.syslog("error", "[Lua] Error during syslogwait: " .. tostring(err))
+        break
+    end
+end
+
+rt.syslogwatch(watch_id, false)
