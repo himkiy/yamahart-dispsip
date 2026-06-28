@@ -25,7 +25,7 @@ fi
 # デフォルト値の設定（.envで未指定の場合）
 TARGET_FILENAME="${TARGET_FILENAME:-sip_logger.lua}"
 TMP_FILE="sip_logger_generated.lua"
-TEMPLATE_FILE="sip_logger.lua.tmpl"
+TEMPLATE_FILE="src/sip_logger.lua.tmpl"
 
 if [ ! -f "$TEMPLATE_FILE" ]; then
     echo "Error: Template file ${TEMPLATE_FILE} not found." >&2
